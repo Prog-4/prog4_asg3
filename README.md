@@ -9,3 +9,10 @@ It primarily functions as a simple inventory management interface; reading in th
 - The searchbar will generate a new inventory list based on the user query.
 - The inventory list is scrollable interactive: tapping on an item will open that item's page
 - Tapping the Add Item will open a new activity and display a series of EditText components for the user to enter in the new item data. Then, the user can tap a button to return the values to MainActivity and writes the contents of the new Item to the arrayList 
+
+## REST API:
+http://34.68.196.188:8080/
+GET | /api/items/ | | Find list of all items
+GET | /api/items/name=Googly%20Eyes | | Find specific item by name
+GET | /api/items/id=1000 | | Find specific item by ID
+POST | /api/items/ | PARAMS: id, name, quantity, price, supplier_id | Adds a new Item
