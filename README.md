@@ -12,6 +12,8 @@ It primarily functions as a simple inventory management interface; reading in th
 
 ## REST API:
 http://34.68.196.188:8080/
+Method | Endpoint | Params | Description
+--- | --- | --- | --- 
 GET | /api/items/ | | Find list of all items
 GET | /api/items/name=Googly%20Eyes | | Find specific item by name
 GET | /api/items/id=1000 | | Find specific item by ID
