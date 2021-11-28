@@ -2,7 +2,9 @@ package com.example.asg2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +13,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -18,23 +31,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-
+    RequestQueue requestQueue;
     ArrayList<Item> itemList;
     Button myButton;
     ArrayList<Item> searchList;
     String result;
     private ArrayList<Item> itemsList = new ArrayList<>();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        requestQueue = Volley.newRequestQueue(this);
 
         // on MainActivity startup, read items.txt into ArrayList<Item> and call generateListView()
+
 
         itemList = readItems();
         searchList = new ArrayList<>();
@@ -73,6 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void newItemClick(View v){
         Intent intent = new Intent(MainActivity.this, CreateItem.class);
         startActivityForResult(intent, 0);
+
+
         //Asks to receive bundle when activity finishes
     }
 
@@ -90,6 +109,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //write newItem to the file
         writeItem(newItem);
         generateListView(this.itemsList);
+
+        String baseURl = "http://34.68.196.188:8080";
+        String route = "/api/items/";
+        String url = baseURl + route;
+        JSONObject j = new JSONObject();
+
+        try {
+            j.put("id", id);
+            j.put("name", name);
+            j.put("quantity", quantity);
+            j.put("price", cost);
+            j.put("supplier_id", supID);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        JsonObjectRequest jRequest = new JsonObjectRequest(Request.Method.POST, url, j,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(MainActivity.this, response.toString(), Toast.LENGTH_LONG).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // What should we do if an error happens
+                        Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+
+        requestQueue.add(jRequest);
+
+
 
     }
 
@@ -153,38 +208,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *      Will be converted to ArrayList<Items> once items has been uploaded.
      */
     public ArrayList<Item> readItems() {
+
+        String baseURl = "http://34.68.196.188:8080";
+        String route = "/api/items/";
         ArrayList<Item> fileArr = new ArrayList<>();
-        String filePath = "items";
-        String[] split;
-        Item item;
-        int id;
-        String name;
-        int quantity;
-        double cost;
-        int suppId;
 
-        try {
-            InputStream inputStream = getResources().openRawResource(getResources().getIdentifier(filePath, "raw", getPackageName()));
-            Scanner scanner = new Scanner(inputStream);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                split = line.split(";");
-                // Fill in all the variables with the parsed values form the 'split' Array
-                id = Integer.parseInt(split[0]);
-                name = split[1];
-                quantity = Integer.parseInt(split[2]);
-                cost = Double.parseDouble(split[3]);
-                suppId = Integer.parseInt(split[4]);
 
-                item = new Item(id, name, quantity, cost,suppId);
-                fileArr.add(item);
-            }
-            scanner.close();
-            inputStream.close();
-        } catch(IOException ignore) {
-            Log.e("MainActivity - fileRead","File " + filePath + " not found. Error in fileRead() method.");
-        }
+        String url = baseURl + route;
+
+        JsonArrayRequest jRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+               new Response.Listener<JSONArray>() {
+                   @Override
+                   public void onResponse(JSONArray response) {
+                       try {
+
+                           for (int i = 0; i < response.length(); i++) {
+
+                               JSONObject json_data = response.getJSONObject(i);
+                               int id = json_data.getInt("id");
+                               String name = json_data.getString("name");
+                               int quantity = json_data.getInt("quantity");
+                               double cost = json_data.getDouble("price");
+                               int suppId = json_data.getInt("supplier_id");
+
+                               fileArr.add(new Item(id, name, quantity, cost, suppId));
+                           }
+
+
+
+                       } catch (JSONException e) {
+                           e.printStackTrace();
+                       }
+
+                   }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Some thing went wrong: "+ error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+
+        requestQueue.add(jRequest);
         return fileArr;
     }
 
-}
+    }
+
