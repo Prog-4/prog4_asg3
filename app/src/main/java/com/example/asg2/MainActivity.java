@@ -90,6 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void newItemClick(View v){
         Intent intent = new Intent(MainActivity.this, CreateItem.class);
         startActivityForResult(intent, 0);
+
+
         //Asks to receive bundle when activity finishes
     }
 
@@ -107,6 +109,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //write newItem to the file
         writeItem(newItem);
         generateListView(this.itemsList);
+
+        String baseURl = "http://34.68.196.188:8080";
+        String route = "/api/items/";
+        String url = baseURl + route;
+        JSONObject j = new JSONObject();
+
+        try {
+            j.put("id", id);
+            j.put("name", name);
+            j.put("quantity", quantity);
+            j.put("price", cost);
+            j.put("supplier_id", supID);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        JsonObjectRequest jRequest = new JsonObjectRequest(Request.Method.POST, url, j,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(MainActivity.this, response.toString(), Toast.LENGTH_LONG).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // What should we do if an error happens
+                        Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_LONG).show();
+                    }
+                }
+        );
+
+        requestQueue.add(jRequest);
+
+
 
     }
 
