@@ -2,7 +2,9 @@ package com.example.asg2;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +13,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -40,14 +44,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String result;
     private ArrayList<Item> itemsList = new ArrayList<>();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         requestQueue = Volley.newRequestQueue(this);
+
         // on MainActivity startup, read items.txt into ArrayList<Item> and call generateListView()
+
 
         itemList = readItems();
         searchList = new ArrayList<>();
@@ -178,18 +182,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                new Response.Listener<JSONArray>() {
                    @Override
                    public void onResponse(JSONArray response) {
-
                        try {
 
                            for (int i = 0; i < response.length(); i++) {
+
                                JSONObject json_data = response.getJSONObject(i);
                                int id = json_data.getInt("id");
                                String name = json_data.getString("name");
                                int quantity = json_data.getInt("quantity");
                                double cost = json_data.getDouble("price");
                                int suppId = json_data.getInt("supplier_id");
-                               Item item1 = new Item(id, name, quantity, cost, suppId);
-                               fileArr.add(item1);
+
+                               fileArr.add(new Item(id, name, quantity, cost, suppId));
                            }
 
 
@@ -203,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
+                        Toast.makeText(MainActivity.this, "Some thing went wrong: "+ error.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
         );
